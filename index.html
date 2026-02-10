@@ -1,308 +1,175 @@
-<!DOCTYPE html>// 1) الترتيب الرئيسي (فوق)
-const priorityCodes = [
-  "SAR","USD","EUR","KWD","AED","EGP","QAR","BHD","OMR","JOD","IQD"
-];
-
-// 2) بعد العراق مباشرة (قبل الخط)
-const afterIraqCodes = [
-  "LBP", // ليرة لبنانية
-  "YER", // ريال يمني
-  "MAD", // درهم مغربي
-  "SDG", // جنيه سوداني
-  "BDT", // تاكا بنغلاديشي
-  "DZD", // دينار جزائري
-  "TND", // دينار تونسي
-  "LYD", // دينار ليبي
-  "IDR", // روبية إندونيسية (اللي تقصدها)
-  "INR"  // روبية هندية
-];
-
-// 3) تأكد إن القاموس فيه IDR (لو ناقص عندك)
-const arMoney = {
-  SAR:"ريال سعودي",
-  USD:"دولار أمريكي",
-  EUR:"يورو",
-  KWD:"دينار كويتي",
-  AED:"درهم إماراتي",
-  EGP:"جنيه مصري",
-  QAR:"ريال قطري",
-  BHD:"دينار بحريني",
-  OMR:"ريال عُماني",
-  JOD:"دينار أردني",
-  IQD:"دينار عراقي",
-
-  LBP:"ليرة لبنانية",
-  YER:"ريال يمني",
-  MAD:"درهم مغربي",
-  SDG:"جنيه سوداني",
-  BDT:"تاكا بنغلاديشي",
-  DZD:"دينار جزائري",
-  TND:"دينار تونسي",
-  LYD:"دينار ليبي",
-  IDR:"روبية إندونيسية",
-  INR:"روبية هندية",
-};
-
-// -------- لا تغيّر اللي تحت إلا إذا تعرف وش تسوي --------
-
-// fallback عام لأسماء العملات بالعربي (للي مو موجود بالقاموس)
-const currencyDisplayAR =
-  (typeof Intl !== "undefined" && Intl.DisplayNames)
-    ? new Intl.DisplayNames(["ar"], { type: "currency" })
-    : null;
-
-function getArabicCurrencyName(code){
-  if (!currencyDisplayAR) return null;
-  try {
-    const n = currencyDisplayAR.of(code);
-    if (!n || n === code) return null;
-    return n;
-  } catch { return null; }
-}
-
-const fromSelect = document.getElementById('fromCurrency');
-const toSelect = document.getElementById('toCurrency');
-
-function labelFor(code){
-  if (arMoney[code]) return `${code} - ${arMoney[code]}`;
-  const fb = getArabicCurrencyName(code) || code;
-  return `${code} - ${fb}`;
-}
-
-function addOptionBoth(code){
-  const label = labelFor(code);
-  fromSelect.add(new Option(label, code));
-  toSelect.add(new Option(label, code));
-}
-
-function addSeparator(){
-  const s1 = new Option("──────────","__sep__"); s1.disabled = true; fromSelect.add(s1);
-  const s2 = new Option("──────────","__sep__"); s2.disabled = true; toSelect.add(s2);
-}
-
-async function init(){
-  const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-  const data = await res.json();
-  const allCodes = Object.keys(data.rates);
-  const setAll = new Set(allCodes);
-
-  fromSelect.innerHTML = "";
-  toSelect.innerHTML = "";
-
-  // (1) فوق: الأولويات
-  priorityCodes.forEach(c => setAll.has(c) && addOptionBoth(c));
-
-  // (2) بعد العراق: القائمة الثانية قبل الخط
-  afterIraqCodes.forEach(c => {
-    if (setAll.has(c) && !priorityCodes.includes(c)) addOptionBoth(c);
-  });
-
-  // (3) خط فاصل
-  addSeparator();
-
-  // (4) باقي العملات
-  const rest = allCodes.filter(c => !priorityCodes.includes(c) && !afterIraqCodes.includes(c));
-  rest.sort((a,b)=>{
-    const an = getArabicCurrencyName(a) || a;
-    const bn = getArabicCurrencyName(b) || b;
-    return an.localeCompare(bn,"ar");
-  });
-  rest.forEach(addOptionBoth);
-
-  // قيم افتراضية
-  fromSelect.value = "SAR";
-  toSelect.value = "USD";
-}
-
-// نداء التشغيل
-init();
-
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>محول العملات الذكي</title>
+  <title>محول العملات</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-
   <style>
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background: linear-gradient(135deg, #eef2ff, #ecfeff);
-      color: #0f172a;
+    body{
+      font-family:'Tajawal',sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #e6fffb 0%, #eef6ff 45%, #f8fbff 100%);
+      color:#0f172a;
     }
-
-    .glass-card {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(15, 23, 42, 0.08);
+    .glass{
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(15,23,42,.06);
+      box-shadow:0 30px 80px rgba(15,23,42,.12);
     }
-
-    select {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: left 1rem center;
-      background-size: 1em;
+    select{
+      appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2306b6d4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:left 1rem center;
+      background-size:1em;
     }
-
-    option {
-      background-color: #ffffff;
-      color: #0f172a;
-    }
-
-    option[disabled] {
-      color: #94a3b8;
-    }
+    option[disabled]{color:#94a3b8}
   </style>
 </head>
 
-<body class="flex items-center justify-center min-h-screen p-4">
-  <div class="glass-card p-6 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-xl">
-    <div class="text-center mb-10">
-      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-500">
-        حساب العملات
-      </h2>
-      <p class="text-slate-500 mt-3 text-sm">واجهة مريحة + أسماء عربية كاملة</p>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="glass rounded-[2.5rem] p-6 md:p-10 w-full max-w-xl">
+    <div class="text-center mb-8">
+      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-500">حساب العملات</h2>
+      <p class="text-slate-500 mt-2 text-sm">واجهة مريحة + ترتيب عربي مخصص</p>
     </div>
 
-    <div class="space-y-8">
+    <div class="space-y-6">
       <div>
-        <label class="block text-xs font-bold text-slate-500 mb-2 mr-2">المبلغ المطلوب</label>
-        <input type="number" id="amount" value="0"
-          class="w-full p-5 bg-white border border-slate-300 rounded-3xl focus:ring-2 focus:ring-emerald-400 outline-none text-3xl font-bold text-center text-slate-900">
+        <label class="block text-xs font-bold text-slate-500 mb-2">المبلغ المطلوب</label>
+        <input id="amount" type="number" placeholder="أدخل المبلغ"
+          class="w-full p-5 bg-white border border-slate-300 rounded-3xl focus:ring-2 focus:ring-teal-400 outline-none text-2xl font-bold text-center">
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-bold text-slate-500 mr-2 mb-2">من عملة</label>
-          <select id="fromCurrency"
-            class="w-full p-4 bg-white border border-slate-300 rounded-2xl text-slate-900 font-bold"></select>
+          <label class="block text-xs font-bold text-slate-500 mb-2">من عملة</label>
+          <select id="fromCurrency" class="w-full p-4 bg-white border border-slate-300 rounded-2xl font-bold"></select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-500 mr-2 mb-2">إلى عملة</label>
-          <select id="toCurrency"
-            class="w-full p-4 bg-white border border-slate-300 rounded-2xl text-slate-900 font-bold"></select>
+          <label class="block text-xs font-bold text-slate-500 mb-2">إلى عملة</label>
+          <select id="toCurrency" class="w-full p-4 bg-white border border-slate-300 rounded-2xl font-bold"></select>
         </div>
       </div>
 
-      <button onclick="convert()" id="btn"
-        class="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black py-5 rounded-[2rem] transition-all shadow-lg text-xl">
+      <button id="btn" onclick="convert()"
+        class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white font-black py-5 rounded-[2rem] shadow-lg text-xl">
         حساب السعر الآن
       </button>
 
       <div id="resultBox" class="hidden">
-        <div class="bg-white border border-slate-200 p-8 rounded-[2rem] text-center shadow-inner">
+        <div class="bg-white border border-slate-200 rounded-[2rem] p-6 text-center">
           <p class="text-slate-500 text-sm mb-2">النتيجة</p>
-          <h3 id="resultText" class="text-5xl font-black text-teal-600
- mb-3"></h3>
+          <h3 id="resultText" class="text-4xl font-black text-teal-600 mb-2"></h3>
           <div id="rateInfo" class="inline-block px-4 py-1 bg-slate-100 rounded-full text-slate-500 text-[11px] font-mono"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    const priorityCodes = ["SAR","USD","EUR","KWD","AED","EGP","QAR","BHD","OMR","JOD","IQD","GBP","TRY"];
+<script>
+/* =========================
+   ترتيب العملات (ثابت)
+   ========================= */
+const priorityCodes = [
+  "SAR","USD","EUR","KWD","AED","EGP","QAR","BHD","OMR","JOD","IQD"
+];
 
-    const arMoney = {
-      SAR:"ريال سعودي", AED:"درهم إماراتي", KWD:"دينار كويتي", BHD:"دينار بحريني",
-      QAR:"ريال قطري", OMR:"ريال عُماني", JOD:"دينار أردني", IQD:"دينار عراقي",
-      EGP:"جنيه مصري", USD:"دولار أمريكي", EUR:"يورو", GBP:"جنيه إسترليني",
-      CHF:"فرنك سويسري", CAD:"دولار كندي", AUD:"دولار أسترالي",
-      JPY:"ين ياباني", CNY:"يوان صيني", TRY:"ليرة تركية",
-      INR:"روبية هندية", MYR:"رينغيت ماليزي", ZAR:"راند جنوب أفريقي"
-    };
+const afterIraqCodes = [
+  "LBP","YER","MAD","SDG","BDT","DZD","TND","LYD","IDR","INR"
+];
 
-    const currencyDisplayAR =
-      (typeof Intl !== "undefined" && Intl.DisplayNames)
-        ? new Intl.DisplayNames(["ar"], { type: "currency" })
-        : null;
+const arMoney = {
+  SAR:"ريال سعودي", USD:"دولار أمريكي", EUR:"يورو", KWD:"دينار كويتي",
+  AED:"درهم إماراتي", EGP:"جنيه مصري", QAR:"ريال قطري", BHD:"دينار بحريني",
+  OMR:"ريال عُماني", JOD:"دينار أردني", IQD:"دينار عراقي",
+  LBP:"ليرة لبنانية", YER:"ريال يمني", MAD:"درهم مغربي", SDG:"جنيه سوداني",
+  BDT:"تاكا بنغلاديشي", DZD:"دينار جزائري", TND:"دينار تونسي",
+  LYD:"دينار ليبي", IDR:"روبية إندونيسية", INR:"روبية هندية"
+};
 
-    function getArabicCurrencyName(code){
-      if (!currencyDisplayAR) return null;
-      try {
-        const n = currencyDisplayAR.of(code);
-        if (!n || n === code) return null;
-        return n;
-      } catch { return null; }
-    }
+/* أسماء عربية احتياطية */
+const currencyDisplayAR =
+  (typeof Intl!=="undefined" && Intl.DisplayNames)
+    ? new Intl.DisplayNames(["ar"],{type:"currency"}) : null;
 
-    const fromSelect = document.getElementById('fromCurrency');
-    const toSelect = document.getElementById('toCurrency');
+function getArabicCurrencyName(code){
+  if(!currencyDisplayAR) return null;
+  try{
+    const n=currencyDisplayAR.of(code);
+    if(!n||n===code) return null;
+    return n;
+  }catch{return null}
+}
 
-    function labelFor(code){
-      if (arMoney[code]) return `${code} - ${arMoney[code]}`;
-      const fb = getArabicCurrencyName(code) || code;
-      return `${code} - ${fb}`;
-    }
+const fromSelect=document.getElementById('fromCurrency');
+const toSelect=document.getElementById('toCurrency');
 
-    function addOptionBoth(code){
-      const label = labelFor(code);
-      fromSelect.add(new Option(label, code));
-      toSelect.add(new Option(label, code));
-    }
+function labelFor(code){
+  if(arMoney[code]) return `${code} - ${arMoney[code]}`;
+  const fb=getArabicCurrencyName(code)||code;
+  return `${code} - ${fb}`;
+}
 
-    function addSeparator(){
-      const s1 = new Option("──────────","__sep__"); s1.disabled = true; fromSelect.add(s1);
-      const s2 = new Option("──────────","__sep__"); s2.disabled = true; toSelect.add(s2);
-    }
+function addOptionBoth(code){
+  const label=labelFor(code);
+  fromSelect.add(new Option(label,code));
+  toSelect.add(new Option(label,code));
+}
 
-    async function init(){
-      const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-      const data = await res.json();
-      const allCodes = Object.keys(data.rates);
+function addSeparator(){
+  const s1=new Option("──────────","__sep__"); s1.disabled=true; fromSelect.add(s1);
+  const s2=new Option("──────────","__sep__"); s2.disabled=true; toSelect.add(s2);
+}
 
-      fromSelect.innerHTML = ""; 
-      toSelect.innerHTML = "";
+async function init(){
+  const res=await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+  const data=await res.json();
+  const allCodes=Object.keys(data.rates);
+  const setAll=new Set(allCodes);
 
-      const setAll = new Set(allCodes);
+  fromSelect.innerHTML=""; toSelect.innerHTML="";
 
-      priorityCodes.forEach(c => setAll.has(c) && addOptionBoth(c));
-      addSeparator();
+  priorityCodes.forEach(c=>setAll.has(c)&&addOptionBoth(c));
+  afterIraqCodes.forEach(c=>{ if(setAll.has(c)&&!priorityCodes.includes(c)) addOptionBoth(c); });
+  addSeparator();
 
-      const rest = allCodes.filter(c => !priorityCodes.includes(c));
-      rest.sort((a,b)=>{
-        const an = getArabicCurrencyName(a) || a;
-        const bn = getArabicCurrencyName(b) || b;
-        return an.localeCompare(bn,"ar");
-      });
-      rest.forEach(addOptionBoth);
+  const rest=allCodes.filter(c=>!priorityCodes.includes(c)&&!afterIraqCodes.includes(c));
+  rest.sort((a,b)=>{
+    const an=getArabicCurrencyName(a)||a;
+    const bn=getArabicCurrencyName(b)||b;
+    return an.localeCompare(bn,"ar");
+  });
+  rest.forEach(addOptionBoth);
 
-      fromSelect.value = "SAR";
-      toSelect.value = "USD";
-    }
+  fromSelect.value="SAR"; toSelect.value="USD";
+}
 
-    async function convert(){
-      const amount = Number(document.getElementById('amount').value);
-      const from = fromSelect.value;
-      const to = toSelect.value;
-      if (!amount || amount <= 0 || from==="__sep__" || to==="__sep__") return;
+async function convert(){
+  const amount=Number(document.getElementById('amount').value);
+  const from=fromSelect.value;
+  const to=toSelect.value;
+  if(!amount||amount<=0||from==="__sep__"||to==="__sep__") return;
 
-      const btn = document.getElementById('btn');
-      btn.textContent = "جاري الحساب...";
-      try{
-        const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${from}`);
-        const data = await res.json();
-        const rate = data.rates[to];
+  const btn=document.getElementById('btn');
+  btn.textContent="جاري الحساب...";
+  try{
+    const res=await fetch(`https://api.exchangerate-api.com/v4/latest/${from}`);
+    const data=await res.json();
+    const rate=data.rates[to];
+    const total=Math.round(amount*rate);
+    document.getElementById('resultText').textContent=`${total.toLocaleString()} ${labelFor(to)}`;
+    document.getElementById('rateInfo').textContent=`1 ${from} = ${rate.toFixed(4)} ${to}`;
+    document.getElementById('resultBox').classList.remove('hidden');
+  }catch{
+    alert("خطأ في الاتصال");
+  }
+  btn.textContent="حساب السعر الآن";
+}
 
-        const total = Math.round(amount * rate);
-        document.getElementById('resultText').textContent =
-          `${total.toLocaleString()} ${labelFor(to)}`;
-        document.getElementById('rateInfo').textContent =
-          `1 ${from} = ${rate.toFixed(4)} ${to}`;
-        document.getElementById('resultBox').classList.remove('hidden');
-      }catch{
-        alert("خطأ في الاتصال");
-      }
-      btn.textContent = "حساب السعر الآن";
-    }
-
-    init();
-  </script>
+init();
+</script>
 </body>
 </html>
-
-
-
-
