@@ -6,79 +6,95 @@
   <title>محول العملات الذكي</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: 'Tajawal', sans-serif; background-color: #0f172a; color: #f1f5f9; }
-    .glass-card { background: rgba(30,41,59,.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.1); }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #ecfeff);
+      color: #0f172a;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
     select {
       appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: left 1rem center;
       background-size: 1em;
     }
-    option { background-color: #1e293b; color: #fff; }
-    option[disabled] { color: #64748b; }
+
+    option {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+
+    option[disabled] {
+      color: #94a3b8;
+    }
   </style>
 </head>
 
 <body class="flex items-center justify-center min-h-screen p-4">
   <div class="glass-card p-6 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-xl">
     <div class="text-center mb-10">
-      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">حساب العملات</h2>
-      <p class="text-slate-400 mt-3 text-sm">أسماء عربية لكل العملات + ترتيب ذكي</p>
+      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-500">
+        حساب العملات
+      </h2>
+      <p class="text-slate-500 mt-3 text-sm">واجهة مريحة + أسماء عربية كاملة</p>
     </div>
 
     <div class="space-y-8">
       <div>
         <label class="block text-xs font-bold text-slate-500 mb-2 mr-2">المبلغ المطلوب</label>
         <input type="number" id="amount" value="100"
-          class="w-full p-5 bg-slate-900/50 border border-slate-700 rounded-3xl focus:ring-2 focus:ring-blue-500 outline-none text-3xl font-bold text-center text-white">
+          class="w-full p-5 bg-white border border-slate-300 rounded-3xl focus:ring-2 focus:ring-emerald-400 outline-none text-3xl font-bold text-center text-slate-900">
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
         <div>
           <label class="block text-xs font-bold text-slate-500 mr-2 mb-2">من عملة</label>
-          <select id="fromCurrency" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl text-white font-bold"></select>
+          <select id="fromCurrency"
+            class="w-full p-4 bg-white border border-slate-300 rounded-2xl text-slate-900 font-bold"></select>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-500 mr-2 mb-2">إلى عملة</label>
-          <select id="toCurrency" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl text-white font-bold"></select>
+          <select id="toCurrency"
+            class="w-full p-4 bg-white border border-slate-300 rounded-2xl text-slate-900 font-bold"></select>
         </div>
       </div>
 
       <button onclick="convert()" id="btn"
-        class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black py-5 rounded-[2rem] transition-all shadow-xl text-xl">
+        class="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-black py-5 rounded-[2rem] transition-all shadow-lg text-xl">
         حساب السعر الآن
       </button>
 
       <div id="resultBox" class="hidden">
-        <div class="bg-slate-900/80 border border-slate-700 p-8 rounded-[2rem] text-center">
+        <div class="bg-white border border-slate-200 p-8 rounded-[2rem] text-center shadow-inner">
           <p class="text-slate-500 text-sm mb-2">النتيجة</p>
-          <h3 id="resultText" class="text-5xl font-black text-emerald-400 mb-3"></h3>
-          <div id="rateInfo" class="inline-block px-4 py-1 bg-slate-800 rounded-full text-slate-400 text-[11px] font-mono"></div>
+          <h3 id="resultText" class="text-5xl font-black text-emerald-600 mb-3"></h3>
+          <div id="rateInfo" class="inline-block px-4 py-1 bg-slate-100 rounded-full text-slate-500 text-[11px] font-mono"></div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // ترتيب أولي (اختياري)
     const priorityCodes = ["SAR","USD","EUR","KWD","AED","EGP","QAR","BHD","OMR","JOD","IQD","GBP","TRY"];
 
-    // قاموس مُعرّب (يدوي) — والباقي fallback تلقائي
     const arMoney = {
-      SAR:"ريال سعودي", AED:"درهم إماراتي", KWD:"دينار كويتي", BHD:"دينار بحريني", QAR:"ريال قطري",
-      OMR:"ريال عُماني", JOD:"دينار أردني", IQD:"دينار عراقي", EGP:"جنيه مصري",
-      USD:"دولار أمريكي", EUR:"يورو", GBP:"جنيه إسترليني", CHF:"فرنك سويسري",
-      CAD:"دولار كندي", AUD:"دولار أسترالي", NZD:"دولار نيوزيلندي",
-      JPY:"ين ياباني", CNY:"يوان صيني", KRW:"وون كوري جنوبي", RUB:"روبل روسي",
-      TRY:"ليرة تركية", INR:"روبية هندية", PKR:"روبية باكستانية", BDT:"تاكا بنغلاديشي",
-      IDR:"روبية إندونيسية", MYR:"رينغيت ماليزي", THB:"بات تايلندي", VND:"دونغ فيتنامي",
-      DZD:"دينار جزائري", MAD:"درهم مغربي", LYD:"دينار ليبي", TND:"دينار تونسي",
-      ZAR:"راند جنوب أفريقي", NGN:"نيرة نيجيرية", MXN:"بيزو مكسيكي", BRL:"ريال برازيلي"
+      SAR:"ريال سعودي", AED:"درهم إماراتي", KWD:"دينار كويتي", BHD:"دينار بحريني",
+      QAR:"ريال قطري", OMR:"ريال عُماني", JOD:"دينار أردني", IQD:"دينار عراقي",
+      EGP:"جنيه مصري", USD:"دولار أمريكي", EUR:"يورو", GBP:"جنيه إسترليني",
+      CHF:"فرنك سويسري", CAD:"دولار كندي", AUD:"دولار أسترالي",
+      JPY:"ين ياباني", CNY:"يوان صيني", TRY:"ليرة تركية",
+      INR:"روبية هندية", MYR:"رينغيت ماليزي", ZAR:"راند جنوب أفريقي"
     };
 
-    // fallback عام لأسماء العملات بالعربي
     const currencyDisplayAR =
       (typeof Intl !== "undefined" && Intl.DisplayNames)
         ? new Intl.DisplayNames(["ar"], { type: "currency" })
@@ -118,15 +134,14 @@
       const data = await res.json();
       const allCodes = Object.keys(data.rates);
 
-      fromSelect.innerHTML = ""; toSelect.innerHTML = "";
+      fromSelect.innerHTML = ""; 
+      toSelect.innerHTML = "";
 
       const setAll = new Set(allCodes);
 
-      // الأولويات
       priorityCodes.forEach(c => setAll.has(c) && addOptionBoth(c));
       addSeparator();
 
-      // الباقي مرتّب أبجديًا حسب الاسم العربي إن أمكن
       const rest = allCodes.filter(c => !priorityCodes.includes(c));
       rest.sort((a,b)=>{
         const an = getArabicCurrencyName(a) || a;
@@ -152,7 +167,6 @@
         const data = await res.json();
         const rate = data.rates[to];
 
-        // بدون كسور (تقريب لأقرب عدد)
         const total = Math.round(amount * rate);
         document.getElementById('resultText').textContent =
           `${total.toLocaleString()} ${labelFor(to)}`;
