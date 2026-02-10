@@ -32,7 +32,9 @@
 <body class="min-h-screen flex items-center justify-center p-4">
   <div class="glass rounded-[2.5rem] p-6 md:p-10 w-full max-w-xl">
     <div class="text-center mb-8">
-      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-500">حساب العملات</h2>
+      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-500">
+        حساب العملات
+      </h2>
       <p class="text-slate-500 mt-2 text-sm">واجهة مريحة + ترتيب عربي مخصص</p>
     </div>
 
@@ -70,9 +72,7 @@
   </div>
 
 <script>
-/* =========================
-   ترتيب العملات (ثابت)
-   ========================= */
+/* ===== ترتيب العملات ===== */
 const priorityCodes = [
   "SAR","USD","EUR","KWD","AED","EGP","QAR","BHD","OMR","JOD","IQD"
 ];
@@ -90,7 +90,7 @@ const arMoney = {
   LYD:"دينار ليبي", IDR:"روبية إندونيسية", INR:"روبية هندية"
 };
 
-/* أسماء عربية احتياطية */
+/* ===== أدوات مساعدة ===== */
 const currencyDisplayAR =
   (typeof Intl!=="undefined" && Intl.DisplayNames)
     ? new Intl.DisplayNames(["ar"],{type:"currency"}) : null;
@@ -124,6 +124,7 @@ function addSeparator(){
   const s2=new Option("──────────","__sep__"); s2.disabled=true; toSelect.add(s2);
 }
 
+/* ===== تهيئة القوائم ===== */
 async function init(){
   const res=await fetch('https://api.exchangerate-api.com/v4/latest/USD');
   const data=await res.json();
@@ -133,7 +134,9 @@ async function init(){
   fromSelect.innerHTML=""; toSelect.innerHTML="";
 
   priorityCodes.forEach(c=>setAll.has(c)&&addOptionBoth(c));
-  afterIraqCodes.forEach(c=>{ if(setAll.has(c)&&!priorityCodes.includes(c)) addOptionBoth(c); });
+  afterIraqCodes.forEach(c=>{
+    if(setAll.has(c)&&!priorityCodes.includes(c)) addOptionBoth(c);
+  });
   addSeparator();
 
   const rest=allCodes.filter(c=>!priorityCodes.includes(c)&&!afterIraqCodes.includes(c));
@@ -147,6 +150,7 @@ async function init(){
   fromSelect.value="SAR"; toSelect.value="USD";
 }
 
+/* ===== التحويل ===== */
 async function convert(){
   const amount=Number(document.getElementById('amount').value);
   const from=fromSelect.value;
@@ -160,8 +164,10 @@ async function convert(){
     const data=await res.json();
     const rate=data.rates[to];
     const total=Math.round(amount*rate);
-    document.getElementById('resultText').textContent=`${total.toLocaleString()} ${labelFor(to)}`;
-    document.getElementById('rateInfo').textContent=`1 ${from} = ${rate.toFixed(4)} ${to}`;
+    document.getElementById('resultText').textContent=
+      `${total.toLocaleString()} ${labelFor(to)}`;
+    document.getElementById('rateInfo').textContent=
+      `1 ${from} = ${rate.toFixed(4)} ${to}`;
     document.getElementById('resultBox').classList.remove('hidden');
   }catch{
     alert("خطأ في الاتصال");
