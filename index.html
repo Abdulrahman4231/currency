@@ -1,4 +1,122 @@
-<!DOCTYPE html>
+<!DOCTYPE html>// 1) الترتيب الرئيسي (فوق)
+const priorityCodes = [
+  "SAR","USD","EUR","KWD","AED","EGP","QAR","BHD","OMR","JOD","IQD"
+];
+
+// 2) بعد العراق مباشرة (قبل الخط)
+const afterIraqCodes = [
+  "LBP", // ليرة لبنانية
+  "YER", // ريال يمني
+  "MAD", // درهم مغربي
+  "SDG", // جنيه سوداني
+  "BDT", // تاكا بنغلاديشي
+  "DZD", // دينار جزائري
+  "TND", // دينار تونسي
+  "LYD", // دينار ليبي
+  "IDR", // روبية إندونيسية (اللي تقصدها)
+  "INR"  // روبية هندية
+];
+
+// 3) تأكد إن القاموس فيه IDR (لو ناقص عندك)
+const arMoney = {
+  SAR:"ريال سعودي",
+  USD:"دولار أمريكي",
+  EUR:"يورو",
+  KWD:"دينار كويتي",
+  AED:"درهم إماراتي",
+  EGP:"جنيه مصري",
+  QAR:"ريال قطري",
+  BHD:"دينار بحريني",
+  OMR:"ريال عُماني",
+  JOD:"دينار أردني",
+  IQD:"دينار عراقي",
+
+  LBP:"ليرة لبنانية",
+  YER:"ريال يمني",
+  MAD:"درهم مغربي",
+  SDG:"جنيه سوداني",
+  BDT:"تاكا بنغلاديشي",
+  DZD:"دينار جزائري",
+  TND:"دينار تونسي",
+  LYD:"دينار ليبي",
+  IDR:"روبية إندونيسية",
+  INR:"روبية هندية",
+};
+
+// -------- لا تغيّر اللي تحت إلا إذا تعرف وش تسوي --------
+
+// fallback عام لأسماء العملات بالعربي (للي مو موجود بالقاموس)
+const currencyDisplayAR =
+  (typeof Intl !== "undefined" && Intl.DisplayNames)
+    ? new Intl.DisplayNames(["ar"], { type: "currency" })
+    : null;
+
+function getArabicCurrencyName(code){
+  if (!currencyDisplayAR) return null;
+  try {
+    const n = currencyDisplayAR.of(code);
+    if (!n || n === code) return null;
+    return n;
+  } catch { return null; }
+}
+
+const fromSelect = document.getElementById('fromCurrency');
+const toSelect = document.getElementById('toCurrency');
+
+function labelFor(code){
+  if (arMoney[code]) return `${code} - ${arMoney[code]}`;
+  const fb = getArabicCurrencyName(code) || code;
+  return `${code} - ${fb}`;
+}
+
+function addOptionBoth(code){
+  const label = labelFor(code);
+  fromSelect.add(new Option(label, code));
+  toSelect.add(new Option(label, code));
+}
+
+function addSeparator(){
+  const s1 = new Option("──────────","__sep__"); s1.disabled = true; fromSelect.add(s1);
+  const s2 = new Option("──────────","__sep__"); s2.disabled = true; toSelect.add(s2);
+}
+
+async function init(){
+  const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+  const data = await res.json();
+  const allCodes = Object.keys(data.rates);
+  const setAll = new Set(allCodes);
+
+  fromSelect.innerHTML = "";
+  toSelect.innerHTML = "";
+
+  // (1) فوق: الأولويات
+  priorityCodes.forEach(c => setAll.has(c) && addOptionBoth(c));
+
+  // (2) بعد العراق: القائمة الثانية قبل الخط
+  afterIraqCodes.forEach(c => {
+    if (setAll.has(c) && !priorityCodes.includes(c)) addOptionBoth(c);
+  });
+
+  // (3) خط فاصل
+  addSeparator();
+
+  // (4) باقي العملات
+  const rest = allCodes.filter(c => !priorityCodes.includes(c) && !afterIraqCodes.includes(c));
+  rest.sort((a,b)=>{
+    const an = getArabicCurrencyName(a) || a;
+    const bn = getArabicCurrencyName(b) || b;
+    return an.localeCompare(bn,"ar");
+  });
+  rest.forEach(addOptionBoth);
+
+  // قيم افتراضية
+  fromSelect.value = "SAR";
+  toSelect.value = "USD";
+}
+
+// نداء التشغيل
+init();
+
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -184,6 +302,7 @@
   </script>
 </body>
 </html>
+
 
 
 
