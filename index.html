@@ -1,113 +1,171 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محول العملات الذكي</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #0f172a; color: #f1f5f9; }
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>محول العملات الذكي</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background-color: #0f172a; color: #f1f5f9; }
+    .glass-card { background: rgba(30,41,59,.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.1); }
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 1rem center;
+      background-size: 1em;
+    }
+    option { background-color: #1e293b; color: #fff; }
+    option[disabled] { color: #64748b; }
+  </style>
 </head>
+
 <body class="flex items-center justify-center min-h-screen p-4">
-
-    <div class="glass-card p-6 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-xl text-center">
-        <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">حساب العملات</h2>
-        <p class="text-slate-400 mb-8 text-sm">تم الضبط: مبالغ صافية بدون كسور</p>
-
-        <div class="space-y-6">
-            <div class="relative group">
-                <label class="block text-xs font-bold text-slate-500 mb-2 mr-2 text-right">المبلغ المطلوب</label>
-                <input type="number" id="amount" value="100" class="w-full p-5 bg-slate-900/50 border border-slate-700 rounded-3xl focus:ring-2 focus:ring-blue-500 outline-none text-center text-2xl font-bold">
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-right">
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-slate-500 mr-2">من عملة</label>
-                    <select id="fromCurrency" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl text-white font-bold"></select>
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-slate-500 mr-2">إلى عملة</label>
-                    <select id="toCurrency" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl text-white font-bold"></select>
-                </div>
-            </div>
-
-            <button onclick="convert()" id="btn" class="w-full py-5 bg-blue-600 hover:bg-blue-500 rounded-3xl font-bold text-xl transition-all shadow-lg shadow-blue-900/20">حساب السعر الآن</button>
-
-            <div id="resultBox" class="hidden mt-8 p-6 bg-blue-900/30 border border-blue-500/30 rounded-[2rem] animate-bounce-in">
-                <p class="text-slate-400 text-sm mb-1">النتيجة النهائية</p>
-                <div id="resultText" class="text-5xl font-black text-emerald-400 mb-2"></div>
-                <div id="rateInfo" class="text-xs text-blue-300 font-medium opacity-70"></div>
-            </div>
-        </div>
+  <div class="glass-card p-6 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-xl">
+    <div class="text-center mb-10">
+      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">حساب العملات</h2>
+      <p class="text-slate-400 mt-3 text-sm">أسماء عربية لكل العملات + ترتيب ذكي</p>
     </div>
 
-    <script>
-        const fromSelect = document.getElementById('fromCurrency');
-        const toSelect = document.getElementById('toCurrency');
+    <div class="space-y-8">
+      <div>
+        <label class="block text-xs font-bold text-slate-500 mb-2 mr-2">المبلغ المطلوب</label>
+        <input type="number" id="amount" value="100"
+          class="w-full p-5 bg-slate-900/50 border border-slate-700 rounded-3xl focus:ring-2 focus:ring-blue-500 outline-none text-3xl font-bold text-center text-white">
+      </div>
 
-        // قائمة العملات العربية في البداية
-        const topCurrencies = [
-            { code: 'SAR', name: 'ريال (السعودية)' },
-            { code: 'IQD', name: 'دينار (العراق)' },
-            { code: 'KWD', name: 'دينار (الكويت)' },
-            { code: 'AED', name: 'درهم (الإمارات)' },
-            { code: 'QAR', name: 'ريال (قطر)' },
-            { code: 'OMR', name: 'ريال (عمان)' },
-            { code: 'BHD', name: 'دينار (البحرين)' },
-            { code: 'EGP', name: 'جنيه (مصر)' },
-            { code: 'USD', name: 'دولار (أمريكا)' },
-            { code: 'EUR', name: 'يورو (أوروبا)' }
-        ];
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mr-2 mb-2">من عملة</label>
+          <select id="fromCurrency" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl text-white font-bold"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mr-2 mb-2">إلى عملة</label>
+          <select id="toCurrency" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl text-white font-bold"></select>
+        </div>
+      </div>
 
-        async function init() {
-            const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-            const data = await res.json();
-            const allCodes = Object.keys(data.rates);
+      <button onclick="convert()" id="btn"
+        class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-black py-5 rounded-[2rem] transition-all shadow-xl text-xl">
+        حساب السعر الآن
+      </button>
 
-            [fromSelect, toSelect].forEach(select => {
-                topCurrencies.forEach(c => {
-                    select.add(new Option(`${c.code} - ${c.name}`, c.code));
-                });
-                allCodes.forEach(code => {
-                    if(!topCurrencies.find(c => c.code === code)) {
-                        select.add(new Option(code, code));
-                    }
-                });
-            });
-            fromSelect.value = 'SAR';
-            toSelect.value = 'IQD';
-        }
+      <div id="resultBox" class="hidden">
+        <div class="bg-slate-900/80 border border-slate-700 p-8 rounded-[2rem] text-center">
+          <p class="text-slate-500 text-sm mb-2">النتيجة</p>
+          <h3 id="resultText" class="text-5xl font-black text-emerald-400 mb-3"></h3>
+          <div id="rateInfo" class="inline-block px-4 py-1 bg-slate-800 rounded-full text-slate-400 text-[11px] font-mono"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        async function convert() {
-            const btn = document.getElementById('btn');
-            btn.innerText = "جاري الحساب...";
-            
-            const amount = document.getElementById('amount').value;
-            const from = fromSelect.value;
-            const to = toSelect.value;
+  <script>
+    // ترتيب أولي (اختياري)
+    const priorityCodes = ["SAR","USD","EUR","KWD","AED","EGP","QAR","BHD","OMR","JOD","IQD","GBP","TRY"];
 
-            try {
-                const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${from}`);
-                const data = await res.json();
-                const rate = data.rates[to];
-                const total = amount * rate;
+    // قاموس مُعرّب (يدوي) — والباقي fallback تلقائي
+    const arMoney = {
+      SAR:"ريال سعودي", AED:"درهم إماراتي", KWD:"دينار كويتي", BHD:"دينار بحريني", QAR:"ريال قطري",
+      OMR:"ريال عُماني", JOD:"دينار أردني", IQD:"دينار عراقي", EGP:"جنيه مصري",
+      USD:"دولار أمريكي", EUR:"يورو", GBP:"جنيه إسترليني", CHF:"فرنك سويسري",
+      CAD:"دولار كندي", AUD:"دولار أسترالي", NZD:"دولار نيوزيلندي",
+      JPY:"ين ياباني", CNY:"يوان صيني", KRW:"وون كوري جنوبي", RUB:"روبل روسي",
+      TRY:"ليرة تركية", INR:"روبية هندية", PKR:"روبية باكستانية", BDT:"تاكا بنغلاديشي",
+      IDR:"روبية إندونيسية", MYR:"رينغيت ماليزي", THB:"بات تايلندي", VND:"دونغ فيتنامي",
+      DZD:"دينار جزائري", MAD:"درهم مغربي", LYD:"دينار ليبي", TND:"دينار تونسي",
+      ZAR:"راند جنوب أفريقي", NGN:"نيرة نيجيرية", MXN:"بيزو مكسيكي", BRL:"ريال برازيلي"
+    };
 
-                // جبر الكسر هنا لتظهر النتيجة قَصّة واحدة
-                const roundedTotal = Math.round(total); 
+    // fallback عام لأسماء العملات بالعربي
+    const currencyDisplayAR =
+      (typeof Intl !== "undefined" && Intl.DisplayNames)
+        ? new Intl.DisplayNames(["ar"], { type: "currency" })
+        : null;
 
-                document.getElementById('resultText').innerText = `${roundedTotal.toLocaleString()} ${to}`;
-                document.getElementById('rateInfo').innerText = `سعر الصرف الحقيقي: 1 ${from} = ${rate.toFixed(4)} ${to}`;
-                document.getElementById('resultBox').classList.remove('hidden');
-            } catch (e) {
-                alert("خطأ في الاتصال بالشبكة");
-            }
-            btn.innerText = "حساب السعر الآن";
-        }
+    function getArabicCurrencyName(code){
+      if (!currencyDisplayAR) return null;
+      try {
+        const n = currencyDisplayAR.of(code);
+        if (!n || n === code) return null;
+        return n;
+      } catch { return null; }
+    }
 
-        init();
-    </script>
+    const fromSelect = document.getElementById('fromCurrency');
+    const toSelect = document.getElementById('toCurrency');
+
+    function labelFor(code){
+      if (arMoney[code]) return `${code} - ${arMoney[code]}`;
+      const fb = getArabicCurrencyName(code) || code;
+      return `${code} - ${fb}`;
+    }
+
+    function addOptionBoth(code){
+      const label = labelFor(code);
+      fromSelect.add(new Option(label, code));
+      toSelect.add(new Option(label, code));
+    }
+
+    function addSeparator(){
+      const s1 = new Option("──────────","__sep__"); s1.disabled = true; fromSelect.add(s1);
+      const s2 = new Option("──────────","__sep__"); s2.disabled = true; toSelect.add(s2);
+    }
+
+    async function init(){
+      const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const data = await res.json();
+      const allCodes = Object.keys(data.rates);
+
+      fromSelect.innerHTML = ""; toSelect.innerHTML = "";
+
+      const setAll = new Set(allCodes);
+
+      // الأولويات
+      priorityCodes.forEach(c => setAll.has(c) && addOptionBoth(c));
+      addSeparator();
+
+      // الباقي مرتّب أبجديًا حسب الاسم العربي إن أمكن
+      const rest = allCodes.filter(c => !priorityCodes.includes(c));
+      rest.sort((a,b)=>{
+        const an = getArabicCurrencyName(a) || a;
+        const bn = getArabicCurrencyName(b) || b;
+        return an.localeCompare(bn,"ar");
+      });
+      rest.forEach(addOptionBoth);
+
+      fromSelect.value = "SAR";
+      toSelect.value = "USD";
+    }
+
+    async function convert(){
+      const amount = Number(document.getElementById('amount').value);
+      const from = fromSelect.value;
+      const to = toSelect.value;
+      if (!amount || amount <= 0 || from==="__sep__" || to==="__sep__") return;
+
+      const btn = document.getElementById('btn');
+      btn.textContent = "جاري الحساب...";
+      try{
+        const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${from}`);
+        const data = await res.json();
+        const rate = data.rates[to];
+
+        // بدون كسور (تقريب لأقرب عدد)
+        const total = Math.round(amount * rate);
+        document.getElementById('resultText').textContent =
+          `${total.toLocaleString()} ${labelFor(to)}`;
+        document.getElementById('rateInfo').textContent =
+          `1 ${from} = ${rate.toFixed(4)} ${to}`;
+        document.getElementById('resultBox').classList.remove('hidden');
+      }catch{
+        alert("خطأ في الاتصال");
+      }
+      btn.textContent = "حساب السعر الآن";
+    }
+
+    init();
+  </script>
 </body>
 </html>
